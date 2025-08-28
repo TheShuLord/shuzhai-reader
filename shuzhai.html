@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>书斋 - 多功能离线阅读器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #5d69be;
+            --secondary-color: #7e8ce0;
+            --accent-color: #6cbf6c;
+            --danger-color: #e35565;
+            --dark-color: #2c3e50;
+            --light-color: #f8f9fa;
+            --gray-color: #ced4da;
+            --text-color: #343a40;
+            --text-light: #6c757d;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --header-height: 60px;
+            --nav-height: 65px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-color);
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* 暗色模式 */
+        body.dark-mode {
+            --light-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --text-light: #a0a0a0;
+            --gray-color: #444;
+            --dark-color: #f0f0f0;
+            background-color: #121212;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode .card,
+        body.dark-mode .reader-content,
+        body.dark-mode .setting-group,
+        body.dark-mode .font-preview {
+            background-color: #2d2d2d;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode .nav-bottom {
+            background-color: #2d2d2d;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .nav-btn {
+            color: #a0a0a0;
+        }
+
+        body.dark-mode .nav-btn.active {
+            color: var(--primary-color);
+        }
+
+        body.dark-mode .empty-state i {
+            color: #555;
+        }
+
+        /* 头部导航 */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            height: var(--header-height);
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .header-hidden {
+            transform: translateY(-100%);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-actions i {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* 主内容区 */
+        .container {
+            padding: calc(var(--header-height) + 15px) 15px calc(var(--nav-height) + 15px);
+            max-width: 100%;
+            transition: padding 0.3s ease;
+        }
+
+        .container-fullscreen {
+            padding: 15px 15px 0;
+        }
+
+        /* 底部导航 */
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            height: var(--nav-height);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-hidden {
+            transform: translateY(100%);
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            padding: 8px 0;
+            width: 25%;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            color: var(--primary-color);
+        }
+
+        .nav-btn i {
+            font-size: 1.3rem;
+        }
+
+        /* 标签页内容 */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 阅读页面样式 */
+        .reader-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .reader-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            min-height: 300px;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .reader-content-fullscreen {
+            max-height: calc(100vh - 30px);
+            border-radius: 0;
+            padding: 25px 15px;
+        }
+
+        /* 文件上传区域 */
+        .upload-area {
+            border: 2px dashed var(--gray-color);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            background-color: rgba(93, 105, 190, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(93, 105, 190, 0.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(93, 105, 190, 0.1);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        /* 工具类 */
+        .hidden {
+            display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--gray-color);
+        }
+
+        /* 设置面板 */
+        .settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .setting-group {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* 字体选择区域 */
+        .font-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .font-option {
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .font-option.active {
+            border-color: var(--primary-color);
+            background-color: rgba(93, 105, 190, 0.1);
+        }
+
+        /* UA切换面板 */
+        .ua-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 1rem;
+            background-color: white;
+            color: var(--text-color);
+        }
+
+        /* 搜索引擎选择 */
+        .search-engine-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 1rem;
+            background-color: white;
+            color: var(--text-color);
+        }
+
+        /* 翻页方式选择 */
+        .paging-style-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 1rem;
+            background-color: white;
+            color: var(--text-color);
+        }
+
+        /* 暗色模式下的选择框 */
+        body.dark-mode .ua-select,
+        body.dark-mode .search-engine-select,
+        body.dark-mode .paging-style-select {
+            background-color: #3d3d3d;
+            color: #f0f0f0;
+            border-color: #555;
+        }
+
+        /* 悬浮按钮 */
+        .floating-buttons {
+            position: fixed;
+            right: 20px;
+            bottom: 90px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* 键盘面板 */
+        .keyboard-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .keyboard-panel.active {
+            display: grid;
+        }
+
+        .keyboard-btn {
+            padding: 12px;
+            background: var(--light-color);
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .keyboard-btn:active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* 纯净阅读模式 */
+        .pure-reading-mode .reader-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            font-size: 1.2rem;
+            line-height: 1.9;
+            box-shadow: none;
+            background: #fcfaf7;
+            color: #333;
+        }
+
+        body.dark-mode .pure-reading-mode .reader-content {
+            background: #2d2d2d;
+            color: #f0f0f0;
+        }
+
+        .pure-reading-mode .reader-controls {
+            max-width: 800px;
+            margin: 0 auto 20px;
+        }
+
+        /* 字体预览 */
+        .font-preview {
+            font-size: 1.1rem;
+            padding: 15px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            margin: 15px 0;
+            background: white;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: calc(var(--header-height) + 10px) 10px calc(var(--nav-height) + 10px);
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.9rem;
+            }
+            
+            .reader-content {
+                padding: 15px;
+                font-size: 1rem;
+            }
+            
+            .font-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .keyboard-panel {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .floating-buttons {
+                bottom: 80px;
+                right: 15px;
+            }
+            
+            .floating-btn {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        /* 自定义字体嵌入 */
+        @font-face {
+            font-family: 'Literata Book';
+            src: local('Literata Book'), url('https://fonts.googleapis.com/css2?family=Literata:opsz@7..72&display=swap');
+        }
+
+        @font-face {
+            font-family: 'LXGW WenKai';
+            src: local('LXGW WenKai'), url('https://fonts.googleapis.com/css2?family=LXGW+WenKai&display=swap');
+        }
+
+        @font-face {
+            font-family: 'Source Serif';
+            src: local('Source Serif'), url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz@8..60&display=swap');
+        }
+
+        /* 翻页动画 */
+        .page-turn {
+            transition: transform 0.3s ease;
+        }
+
+        .page-turn.prev {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .page-turn.next {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        /* 阅读进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: var(--gray-color);
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            display: none;
+        }
+
+        body.dark-mode .search-container {
+            background: #2d2d2d;
+        }
+
+        .search-container.active {
+            display: block;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        body.dark-mode .search-input {
+            background: #3d3d3d;
+            color: #f0f0f0;
+            border-color: #555;
+        }
+
+        /* 阅读器工具栏 */
+        .reader-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-color);
+            margin-bottom: 15px;
+        }
+
+        /* 文件列表 */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-item:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(93, 105, 190, 0.05);
+        }
+
+        .file-icon {
+            margin-right: 12px;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* 动画效果 */
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .animate-slide {
+            animation: slideIn 0.3s ease;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background: #5d69be;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb:hover {
+            background: #7e8ce0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header id="mainHeader">
+        <div class="logo">
+            <i class="fas fa-book-open"></i>
+            <span>书斋</span>
+        </div>
+        <div class="header-actions">
+            <i class="fas fa-search" id="searchBtn"></i>
+            <i class="fas fa-moon" id="darkModeBtn"></i>
+            <i class="fas fa-cog" id="settingsBtn"></i>
+        </div>
+    </header>
+
+    <!-- 搜索框 -->
+    <div class="search-container" id="searchContainer">
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索内容...">
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="container" id="mainContainer">
+        <!-- 阅读页面 -->
+        <div class="tab-content active" id="reader">
+            <div class="card">
+                <div class="reader-controls">
+                    <div>
+                        <button class="btn btn-outline btn-sm" id="prevChapter">
+                            <i class="fas fa-chevron-left"></i> 上一章
+                        </button>
+                        <button class="btn btn-outline btn-sm" id="nextChapter">
+                            下一章 <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline btn-sm" id="togglePureReading">
+                            <i class="fas fa-expand"></i> 纯净阅读
+                        </button>
+                        <button class="btn btn-outline btn-sm" id="toggleFullscreen">
+                            <i class="fas fa-compress"></i> 全屏
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="reader-content" id="readerContent">
+                    <h2>欢迎使用书斋阅读器</h2>
+                    <p>这是一个功能强大的离线阅读器，支持多种文档格式和阅读功能。</p>
+                    <p>您可以使用底部的导航栏切换不同功能，或者使用右侧的悬浮按钮快速访问常用功能。</p>
+                    <h3>主要功能</h3>
+                    <ul>
+                        <li>📖 支持 TXT、PDF、HTML、MHT 等多种文档格式</li>
+                        <li>🎨 自定义字体和阅读主题</li>
+                        <li>🌙 夜间模式和纯净阅读模式</li>
+                        <li>🖥️ UA切换功能，访问电脑版网页</li>
+                        <li>🔍 多搜索引擎切换（必应、百度、谷歌、搜狗、360、抖音）</li>
+                        <li>📄 多种翻页方式（平滑滑动、上下滑动、仿真翻页）</li>
+                        <li>⌨️ 悬浮键盘，使用快捷键操作</li>
+                        <li>💾 离线保存，保护隐私</li>
+                    </ul>
+                    <p>请上传文件或使用浏览器功能开始使用。</p>
+                </div>
+                
+                <!-- 阅读进度条 -->
+                <div class="progress-bar">
+                    <div class="progress" id="readingProgress"></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; margin-top: 20px; flex-wrap: wrap; gap: 10px;">
+                    <button class="btn btn-outline" id="fontSettings">
+                        <i class="fas fa-font"></i> 字体
+                    </button>
+                    <button class="btn btn-outline" id="themeSettings">
+                        <i class="fas fa-palette"></i> 主题
+                    </button>
+                    <button class="btn btn-outline" id="uaSettings">
+                        <i class="fas fa-desktop"></i> UA切换
+                    </button>
+                    <button class="btn btn-outline" id="savePage">
+                        <i class="fas fa-download"></i> 保存网页
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    <span>章节列表</span>
+                </div>
+                
+                <div class="chapter-list" id="chapterList">
+                    <p class="empty-state">暂无章节数据，请上传文档或分析网页</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 浏览器页面 -->
+        <div class="tab-content" id="browser">
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-compass"></i>
+                    <span>网页浏览器</span>
+                </div>
+                
+                <div class="browser-controls">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn btn-outline" id="browserBack">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <button class="btn btn-outline" id="browserForward">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button class="btn btn-outline" id="browserReload">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button class="btn btn-primary" id="browserHome">
+                            <i class="fas fa-home"></i>
+                        </button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="url-input" id="urlInput" placeholder="输入网址或搜索内容" value="https://www.bing.com">
+                        <button class="btn btn-primary" id="browserGo">
+                            <i class="fas fa-search"></i> 前往
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <select class="ua-select" id="uaSelect">
+                            <option value="mobile">移动端UA (默认)</option>
+                            <option value="desktop">电脑端UA (Chrome Windows)</option>
+                            <option value="tablet">平板端UA (iPad)</option>
+                            <option value="custom">自定义UA</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 搜索引擎选择 -->
+                    <div style="margin-top: 15px;">
+                        <select class="search-engine-select" id="searchEngineSelect">
+                            <option value="bing">必应搜索</option>
+                            <option value="baidu">百度搜索</option>
+                            <option value="google">谷歌搜索</option>
+                            <option value="sogou">搜狗搜索</option>
+                            <option value="360">360搜索</option>
+                            <option value="douyin">抖音搜索</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="browser-frame">
+                    <iframe id="browserFrame" src="https://www.bing.com" style="width: 100%; height: 60vh; border: none; border-radius: 8px;"></iframe>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 设置页面 -->
+        <div class="tab-content" id="settings">
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-cog"></i>
+                    <span>阅读设置</span>
+                </div>
+                
+                <div class="settings-panel">
+                    <div class="setting-group">
+                        <div class="setting-item">
+                            <div>
+                                <div>夜间模式</div>
+                                <div class="file-meta">切换到暗色主题保护眼睛</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="nightMode">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div>自动滚动</div>
+                                <div class="file-meta">阅读时自动缓慢滚动页面</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="autoScroll">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div>音量键翻页</div>
+                                <div class="file-meta">使用手机音量键控制翻页</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="volumePaging">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 翻页方式选择 -->
+                    <div class="setting-group">
+                        <div class="setting-item">
+                            <div>
+                                <div>翻页方式</div>
+                                <div class="file-meta">选择阅读时的翻页效果</div>
+                            </div>
+                            <select class="paging-style-select" id="pagingStyle">
+                                <option value="swipe">平滑滑动 (左右滑动)</option>
+                                <option value="scroll">上下滑动 (长页)</option>
+                                <option value="simulation">仿真翻页</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div>字体大小</div>
+                                <div class="file-meta">调整阅读字体大小</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button class="btn btn-sm btn-outline" id="fontSmaller">A-</button>
+                                <button class="btn btn-sm btn-outline" id="fontReset">重置</button>
+                                <button class="btn btn-sm btn-outline" id="fontLarger">A+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div>行高调整</div>
+                                <div class="file-meta">调整阅读行间距</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button class="btn btn-sm btn-outline" id="lineHeightSmaller">-</button>
+                                <button class="btn btn-sm btn-outline" id="lineHeightReset">默认</button>
+                                <button class="btn btn-sm btn-outline" id="lineHeightLarger">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-paint-brush"></i>
+                    <span>主题设置</span>
+                </div>
+                
+                <div class="settings-panel">
+                    <div class="font-options">
+                        <div class="font-option active" data-font="system">
+                            <div>系统默认</div>
+                            <div class="file-meta">使用设备默认字体</div>
+                        </div>
+                        <div class="font-option" data-font="wenkai">
+                            <div>霞鹜文楷</div>
+                            <div class="file-meta">中文字体优化</div>
+                        </div>
+                        <div class="font-option" data-font="literata">
+                            <div>Literata</div>
+                            <div class="file-meta">英文阅读优化</div>
+                        </div>
+                        <div class="font-option" data-font="source-serif">
+                            <div>Source Serif</div>
+                            <div class="file-meta">通用衬线字体</div>
+                        </div>
+                    </div>
+                    
+                    <div class="font-preview">
+                        <p>这是字体预览文本 - 中文测试</p>
+                        <p>The quick brown fox jumps over the lazy dog.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>关于书斋</span>
+                </div>
+                
+                <div class="settings-panel">
+                    <div class="setting-item">
+                        <div>版本</div>
+                        <div class="file-meta">1.0.0</div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div>开发者</div>
+                        <div class="file-meta">个人开发</div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div>更新日期</div>
+                        <div class="file-meta">2023-11-05</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 书库页面 -->
+        <div class="tab-content" id="library">
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-book"></i>
+                    <span>我的书库</span>
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                    <h3>上传文档</h3>
+                    <p>支持TXT、PDF、EPUB等格式文档</p>
+                    <button class="btn btn-primary" id="uploadBtn">
+                        <i class="fas fa-upload"></i> 选择文件
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" accept=".txt,.pdf,.epub,.html,.mht">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-history"></i>
+                    <span>最近阅读</span>
+                </div>
+                
+                <div class="file-list" id="recentFiles">
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <p>暂无阅读记录</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="section-title">
+                    <i class="fas fa-download"></i>
+                    <span>已保存网页</span>
+                </div>
+                
+                <div class="file-list" id="savedPages">
+                    <div class="empty-state">
+                        <i class="fas fa-file-download"></i>
+                        <p>暂无保存的网页</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="nav-bottom" id="navBottom">
+        <div class="nav-btn active" data-tab="reader">
+            <i class="fas fa-book"></i>
+            <span>阅读</span>
+        </div>
+        <div class="nav-btn" data-tab="browser">
+            <i class="fas fa-compass"></i>
+            <span>浏览器</span>
+        </div>
+        <div class="nav-btn" data-tab="library">
+            <i class="fas fa-bookmark"></i>
+            <span>书库</span>
+        </div>
+        <div class="nav-btn" data-tab="settings">
+            <i class="fas fa-cog"></i>
+            <span>设置</span>
+        </div>
+    </div>
+
+    <!-- 悬浮按钮 -->
+    <div class="floating-buttons">
+        <div class="floating-btn" id="floatingFont">
+            <i class="fas fa-font"></i>
+        </div>
+        <div class="floating-btn" id="floatingBrightness">
+            <i class="fas fa-sun"></i>
+        </div>
+        <div class="floating-btn" id="floatingScroll">
+            <i class="fas fa-arrows-alt-v"></i>
+        </div>
+    </div>
+
+    <!-- 键盘面板 -->
+    <div class="keyboard-panel" id="keyboardPanel">
+        <div class="keyboard-btn" data-key="prev">上一页</div>
+        <div class="keyboard-btn" data-key="next">下一页</div>
+        <div class="keyboard-btn" data-key="bookmark">书签</div>
+        <div class="keyboard-btn" data-key="brightness">亮度</div>
+        <div class="keyboard-btn" data-key="font-smaller">字体-</div>
+        <div class="keyboard-btn" data-key="font-larger">字体+</div>
+        <div class="keyboard-btn" data-key="line-smaller">行距-</div>
+        <div class="keyboard-btn" data-key="line-larger">行距+</div>
+    </div>
+
+    <script>
+        // 搜索引擎配置
+        const searchEngines = {
+            bing: {
+                name: "必应搜索",
+                url: "https://www.bing.com/search?q=",
+                home: "https://www.bing.com"
+            },
+            baidu: {
+                name: "百度搜索",
+                url: "https://www.baidu.com/s?wd=",
+                home: "https://www.baidu.com"
+            },
+            google: {
+                name: "谷歌搜索",
+                url: "https://www.google.com/search?q=",
+                home: "https://www.google.com"
+            },
+            sogou: {
+                name: "搜狗搜索",
+                url: "https://www.sogou.com/web?query=",
+                home: "https://www.sogou.com"
+            },
+            360: {
+                name: "360搜索",
+                url: "https://www.so.com/s?q=",
+                home: "https://www.so.com"
+            },
+            douyin: {
+                name: "抖音搜索",
+                url: "https://www.douyin.com/search/",
+                home: "https://www.douyin.com"
+            }
+        };
+
+        // 简单的功能实现代码
+        document.addEventListener('DOMContentLoaded', function() {
+            // 底部导航切换
+            const navBtns = document.querySelectorAll('.nav-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    
+                    // 更新导航按钮状态
+                    navBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 更新标签页内容
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(tab).classList.add('active');
+                });
+            });
+            
+            // 暗色模式切换
+            const darkModeBtn = document.getElementById('darkModeBtn');
+            const nightModeSwitch = document.getElementById('nightMode');
+            
+            function toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                darkModeBtn.classList.toggle('fa-moon', !isDark);
+                darkModeBtn.classList.toggle('fa-sun', isDark);
+                nightModeSwitch.checked = isDark;
+                
+                // 保存设置到本地存储
+                localStorage.setItem('darkMode', isDark);
+            }
+            
+            darkModeBtn.addEventListener('click', toggleDarkMode);
+            nightModeSwitch.addEventListener('change', toggleDarkMode);
+            
+            // 检查本地存储中的暗色模式设置
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                darkModeBtn.classList.add('fa-sun');
+                darkModeBtn.classList.remove('fa-moon');
+                nightModeSwitch.checked = true;
+            }
+            
+            // 文件上传
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            uploadBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const fileName = this.files[0].name;
+                    const fileSize = (this.files[0].size / 1024 / 1024).toFixed(2);
+                    const fileExt = fileName.split('.').pop().toUpperCase();
+                    
+                    // 添加到最近文件列表
+                    const recentFiles = document.getElementById('recentFiles');
+                    recentFiles.innerHTML = '';
+                    
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item animate-slide';
+                    fileItem.innerHTML = `
+                        <div class="file-icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="file-info">
+                            <div class="file-name">${fileName}</div>
+                            <div class="file-meta">${fileExt} 文件 · ${fileSize} MB</div>
+                        </div>
+                        <div class="file-actions">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    `;
+                    
+                    recentFiles.appendChild(fileItem);
+                    
+                    // 模拟文件打开
+                    fileItem.addEventListener('click', function() {
+                        alert(`打开文件: ${fileName}`);
+                        // 这里可以添加实际的文件处理逻辑
+                    });
+                }
+            });
+            
+            // 浏览器功能
+            const browserFrame = document.getElementById('browserFrame');
+            const urlInput = document.getElementById('urlInput');
+            const browserGo = document.getElementById('browserGo');
+            const browserHome = document.getElementById('browserHome');
+            const browserBack = document.getElementById('browserBack');
+            const browserForward = document.getElementById('browserForward');
+            const browserReload = document.getElementById('browserReload');
+            const searchEngineSelect = document.getElementById('searchEngineSelect');
+            
+            // 设置当前搜索引擎
+            let currentSearchEngine = "bing";
+            
+            // 初始化搜索引擎选择
+            const savedSearchEngine = localStorage.getItem('searchEngine');
+            if (savedSearchEngine && searchEngines[savedSearchEngine]) {
+                currentSearchEngine = savedSearchEngine;
+                searchEngineSelect.value = currentSearchEngine;
+                browserFrame.src = searchEngines[currentSearchEngine].home;
+                urlInput.value = searchEngines[currentSearchEngine].home;
+            }
+            
+            // 搜索引擎切换
+            searchEngineSelect.addEventListener('change', function() {
+                currentSearchEngine = this.value;
+                localStorage.setItem('searchEngine', currentSearchEngine);
+                browserFrame.src = searchEngines[currentSearchEngine].home;
+                urlInput.value = searchEngines[currentSearchEngine].home;
+            });
+            
+            // 浏览器首页按钮
+            browserHome.addEventListener('click', function() {
+                browserFrame.src = searchEngines[currentSearchEngine].home;
+                urlInput.value = searchEngines[currentSearchEngine].home;
+            });
+            
+            // 浏览器前进后退刷新
+            browserBack.addEventListener('click', function() {
+                browserFrame.contentWindow.history.back();
+            });
+            
+            browserForward.addEventListener('click', function() {
+                browserFrame.contentWindow.history.forward();
+            });
+            
+            browserReload.addEventListener('click', function() {
+                browserFrame.contentWindow.location.reload();
+            });
+            
+            // 浏览器前往按钮
+            browserGo.addEventListener('click', function() {
+                let url = urlInput.value;
+                
+                // 判断是否是搜索关键词
+                if (url.trim() !== "" && !url.includes(".") && !url.startsWith("http://") && !url.startsWith("https://")) {
+                    // 如果是搜索关键词，使用当前搜索引擎进行搜索
+                    url = searchEngines[currentSearchEngine].url + encodeURIComponent(url);
+                } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                
+                browserFrame.src = url;
+            });
+            
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    browserGo.click();
+                }
+            });
+            
+            // UA切换
+            const uaSelect = document.getElementById('uaSelect');
+            uaSelect.addEventListener('change', function() {
+                let userAgent = '';
+                
+                switch(this.value) {
+                    case 'desktop':
+                        userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+                        break;
+                    case 'tablet':
+                        userAgent = 'Mozilla/5.0 (iPad; CPU OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
+                        break;
+                    default:
+                        // 移动端UA，使用默认
+                        userAgent = navigator.userAgent;
+                }
+                
+                // 在实际应用中，这里需要重新加载iframe并设置UA
+                // 但由于浏览器安全限制，不能直接修改iframe的UA
+                // 这个功能需要更复杂的实现
+                alert(`已切换UA到: ${this.options[this.selectedIndex].text}`);
+            });
+            
+            // 翻页方式设置
+            const pagingStyleSelect = document.getElementById('pagingStyle');
+            
+            // 初始化翻页方式
+            const savedPagingStyle = localStorage.getItem('pagingStyle');
+            if (savedPagingStyle) {
+                pagingStyleSelect.value = savedPagingStyle;
+            }
+            
+            pagingStyleSelect.addEventListener('change', function() {
+                localStorage.setItem('pagingStyle', this.value);
+                alert(`已切换翻页方式到: ${this.options[this.selectedIndex].text}`);
+            });
+            
+            // 字体大小调整
+            const fontSmaller = document.getElementById('fontSmaller');
+            const fontLarger = document.getElementById('fontLarger');
+            const fontReset = document.getElementById('fontReset');
+            const readerContent = document.getElementById('readerContent');
+            
+            let currentFontSize = 16; // 默认字体大小
+            
+            fontSmaller.addEventListener('click', function() {
+                if (currentFontSize > 12) {
+                    currentFontSize -= 2;
+                    readerContent.style.fontSize = currentFontSize + 'px';
+                    localStorage.setItem('fontSize', currentFontSize);
+                }
+            });
+            
+            fontLarger.addEventListener('click', function() {
+                if (currentFontSize < 24) {
+                    currentFontSize += 2;
+                    readerContent.style.fontSize = currentFontSize + 'px';
+                    localStorage.setItem('fontSize', currentFontSize);
+                }
+            });
+            
+            fontReset.addEventListener('click', function() {
+                currentFontSize = 16;
+                readerContent.style.fontSize = currentFontSize + 'px';
+                localStorage.setItem('fontSize', currentFontSize);
+            });
+            
+            // 检查本地存储中的字体大小设置
+            const savedFontSize = localStorage.getItem('fontSize');
+            if (savedFontSize) {
+                currentFontSize = parseInt(savedFontSize);
+                readerContent.style.fontSize = currentFontSize + 'px';
+            }
+            
+            // 行高调整
+            const lineHeightSmaller = document.getElementById('lineHeightSmaller');
+            const lineHeightLarger = document.getElementById('lineHeightLarger');
+            const lineHeightReset = document.getElementById('lineHeightReset');
+            
+            let currentLineHeight = 1.8; // 默认行高
+            
+            lineHeightSmaller.addEventListener('click', function() {
+                if (currentLineHeight > 1.2) {
+                    currentLineHeight -= 0.2;
+                    readerContent.style.lineHeight = currentLineHeight;
+                    localStorage.setItem('lineHeight', currentLineHeight);
+                }
+            });
+            
+            lineHeightLarger.addEventListener('click', function() {
+                if (currentLineHeight < 2.4) {
+                    currentLineHeight += 0.2;
+                    readerContent.style.lineHeight = currentLineHeight;
+                    localStorage.setItem('lineHeight', currentLineHeight);
+                }
+            });
+            
+            lineHeightReset.addEventListener('click', function() {
+                currentLineHeight = 1.8;
+                readerContent.style.lineHeight = currentLineHeight;
+                localStorage.setItem('lineHeight', currentLineHeight);
+            });
+            
+            // 检查本地存储中的行高设置
+            const savedLineHeight = localStorage.getItem('lineHeight');
+            if (savedLineHeight) {
+                currentLineHeight = parseFloat(savedLineHeight);
+                readerContent.style.lineHeight = currentLineHeight;
+            }
+            
+            // 字体选择
+            const fontOptions = document.querySelectorAll('.font-option');
+            
+            fontOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    fontOptions.forEach(o => o.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const font = this.getAttribute('data-font');
+                    let fontFamily = 'PingFang SC, Helvetica Neue, Arial, sans-serif';
+                    
+                    switch(font) {
+                        case 'wenkai':
+                            fontFamily = '"LXGW WenKai", "PingFang SC", sans-serif';
+                            break;
+                        case 'literata':
+                            fontFamily = '"Literata Book", "Times New Roman", serif';
+                            break;
+                        case 'source-serif':
+                            fontFamily = '"Source Serif", "Times New Roman", serif';
+                            break;
+                    }
+                    
+                    readerContent.style.fontFamily = fontFamily;
+                    localStorage.setItem('fontFamily', font);
+                });
+            });
+            
+            // 检查本地存储中的字体设置
+            const savedFontFamily = localStorage.getItem('fontFamily');
+            if (savedFontFamily) {
+                const selectedFont = document.querySelector(`.font-option[data-font="${savedFontFamily}"]`);
+                if (selectedFont) {
+                    fontOptions.forEach(o => o.classList.remove('active'));
+                    selectedFont.classList.add('active');
+                    
+                    let fontFamily = 'PingFang SC, Helvetica Neue, Arial, sans-serif';
+                    
+                    switch(savedFontFamily) {
+                        case 'wenkai':
+                            fontFamily = '"LXGW WenKai", "PingFang SC", sans-serif';
+                            break;
+                        case 'literata':
+                            fontFamily = '"Literata Book", "Times New Roman", serif';
+                            break;
+                        case 'source-serif':
+                            fontFamily = '"Source Serif", "Times New Roman", serif';
+                            break;
+                    }
+                    
+                    readerContent.style.fontFamily = fontFamily;
+                }
+            }
+            
+            // 阅读进度
+            const readingProgress = document.getElementById('readingProgress');
+            
+            readerContent.addEventListener('scroll', function() {
+                const scrollPercent = (this.scrollTop / (this.scrollHeight - this.clientHeight)) * 100;
+                readingProgress.style.width = scrollPercent + '%';
+            });
+            
+            // 搜索功能
+            const searchBtn = document.getElementById('searchBtn');
+            const searchContainer = document.getElementById('searchContainer');
+            const searchInput = document.getElementById('searchInput');
+            
+            searchBtn.addEventListener('click', function() {
+                searchContainer.classList.toggle('active');
+                if (searchContainer.classList.contains('active')) {
+                    searchInput.focus();
+                }
+            });
+            
+            // 纯净阅读模式
+            const togglePureReading = document.getElementById('togglePureReading');
+            let isPureReading = false;
+            
+            togglePureReading.addEventListener('click', function() {
+                isPureReading = !isPureReading;
+                document.body.classList.toggle('pure-reading-mode');
+                
+                if (isPureReading) {
+                    this.innerHTML = '<i class="fas fa-compress"></i> 退出纯净阅读';
+                } else {
+                    this.innerHTML = '<i class="fas fa-expand"></i> 纯净阅读';
+                }
+            });
+            
+            // 全屏模式
+            const toggleFullscreen = document.getElementById('toggleFullscreen');
+            let isFullscreen = false;
+            
+            toggleFullscreen.addEventListener('click', function() {
+                isFullscreen = !isFullscreen;
+                const container = document.getElementById('mainContainer');
+                const header = document.getElementById('mainHeader');
+                const nav = document.getElementById('navBottom');
+                
+                if (isFullscreen) {
+                    container.classList.add('container-fullscreen');
+                    header.classList.add('header-hidden');
+                    nav.classList.add('nav-hidden');
+                    this.innerHTML = '<i class="fas fa-expand"></i> 退出全屏';
+                } else {
+                    container.classList.remove('container-fullscreen');
+                    header.classList.remove('header-hidden');
+                    nav.classList.remove('nav-hidden');
+                    this.innerHTML = '<i class="fas fa-compress"></i> 全屏';
+                }
+            });
+            
+            // 翻页功能
+            const prevChapter = document.getElementById('prevChapter');
+            const nextChapter = document.getElementById('nextChapter');
+            
+            prevChapter.addEventListener('click', function() {
+                readerContent.classList.add('page-turn', 'prev');
+                setTimeout(() => {
+                    readerContent.classList.remove('page-turn', 'prev');
+                    // 这里可以添加实际的上一章逻辑
+                }, 300);
+            });
+            
+            nextChapter.addEventListener('click', function() {
+                readerContent.classList.add('page-turn', 'next');
+                setTimeout(() => {
+                    readerContent.classList.remove('page-turn', 'next');
+                    // 这里可以添加实际的下一章逻辑
+                }, 300);
+            });
+            
+            // 悬浮按钮功能
+            const floatingFont = document.getElementById('floatingFont');
+            const floatingBrightness = document.getElementById('floatingBrightness');
+            const floatingScroll = document.getElementById('floatingScroll');
+            
+            floatingFont.addEventListener('click', function() {
+                // 切换到字体设置
+                navBtns.forEach(b => b.classList.remove('active'));
+                document.querySelector('.nav-btn[data-tab="settings"]').classList.add('active');
+                
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById('settings').classList.add('active');
+                
+                // 滚动到字体设置区域
+                setTimeout(() => {
+                    document.querySelector('.font-options').scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            });
+            
+            floatingBrightness.addEventListener('click', function() {
+                toggleDarkMode();
+            });
+            
+            floatingScroll.addEventListener('click', function() {
+                // 自动滚动功能
+                if (readerContent.scrollHeight > readerContent.clientHeight) {
+                    const scrollAmount = readerContent.clientHeight * 0.8;
+                    readerContent.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+                }
+            });
+            
+            // 键盘面板
+            const keyboardPanel = document.getElementById('keyboardPanel');
+            const keyboardBtns = document.querySelectorAll('.keyboard-btn');
+            
+            // 显示/隐藏键盘面板
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'k' && e.ctrlKey) {
+                    keyboardPanel.classList.toggle('active');
+                    e.preventDefault();
+                }
+            });
+            
+            // 键盘按钮功能
+            keyboardBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const key = this.getAttribute('data-key');
+                    
+                    switch(key) {
+                        case 'prev':
+                            prevChapter.click();
+                            break;
+                        case 'next':
+                            nextChapter.click();
+                            break;
+                        case 'font-smaller':
+                            fontSmaller.click();
+                            break;
+                        case 'font-larger':
+                            fontLarger.click();
+                            break;
+                        case 'line-smaller':
+                            lineHeightSmaller.click();
+                            break;
+                        case 'line-larger':
+                            lineHeightLarger.click();
+                            break;
+                        case 'brightness':
+                            toggleDarkMode();
+                            break;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

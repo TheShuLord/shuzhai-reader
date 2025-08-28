@@ -1,0 +1,29 @@
+{
+  "name": "书斋 - 多功能离线阅读器",
+  "short_name": "书斋",
+  "description": "一个功能强大的离线阅读器，支持多种文档格式和阅读功能",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#5d69be",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSIzMCIgZmlsbD0iIzVkNjliZSIvPjxwYXRoIGQ9Ik05NiA1MEM4MC41NjUgNTAgNjggNjIuNTY1IDY4IDc4VjExNEM2OCAxMjkuNDM1IDgwLjU2NSAxNDIgOTYgMTQyQzExMS40MzUgMTQyIDEyNCAxMjkuNDM1IDEyNCAxMTRWNzhDMTI0IDYyLjU2NSAxMTEuNDM1IDUwIDk2IDUwWk0xMTggMTE0QzExOCAxMjMuOTQxIDEwNS45NDEgMTMyIDk2IDEzMkM4Ni4wNTg5IDEzMiA3NCAxMjMuOTQxIDc0IDExNFY3OEM3NCA2OC4wNTg5IDg2LjA1ODkgNjAgOTYgNjBDMTA1Ljk0MSA2MCAxMTggNjguMDU4OSAxMTggNzhWMTE0WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNODQgODRIMTA4VjEwOEg4NFY4NFoiIGZpbGw9IndoaXRlIi8+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSI4MCIgZmlsbD0iIzVkNjliZSIvPjxwYXRoIGQ9Ik0yNTYgOTZDMjA2LjA1OCA5NiAxNjQgMTM4LjA1OCAxNjQgMTg4VjI4OEMxNjQgMzM3Ljk0MiAyMDYuMDU4IDM4MCAyNTYgMzgwQzMwNS45NDIgMzgwIDM0OCAzMzcuOTQyIDM0OCAyODhWMTg4QzM0OCAxMzguMDU4IDMwNS45NDIgOTYgMjU2IDk2Wk0zMTYgMjg4QzMxNiAzMjQuMzc0IDI5Mi4zNzQgMzQ4IDI1NiAzNDhDMjE5LjYyNiAzNDggMTk2IDMyNC4zNzQgMTk2IDI4OFYxODhDMTk2IDE1MS42MjYgMjE5LjYyNiAxMjggMjU2IDEyOEMyOTIuMzc0IDEyOCAzMTYgMTUxLjYyNiAzMTYgMTg4VjI4OFoiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTIyNCAxOTJIMjg4VjI4OEgyMjRWMTkyWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["books", "productivity", "utilities"],
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false
+}
